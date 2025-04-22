@@ -39,7 +39,7 @@
 
 //#include "ns3/gtk-config-store.h"
 
-//#include "ns3/netanim-module.h"  // 🔴 Required for NetAnim
+#include "ns3/netanim-module.h"  // Required for NetAnim
 
 using namespace ns3;
 
@@ -69,7 +69,7 @@ void print_positions(NodeContainer enbNodes, NodeContainer ueNodes, std::string 
   out << "\nUE Positions:" << std::endl;
   for (uint32_t i = 0; i < ueNodes.GetN(); ++i) {
       Vector pos = ueNodes.Get(i)->GetObject<MobilityModel>()->GetPosition();
-      out << "  UE " << i << ": (x=" << pos.x << ", y=" << pos.y << ")" << std::endl;
+      out << "  UE " << i+1 << ": (x=" << pos.x << ", y=" << pos.y << ")" << std::endl;
   }
   out.close();
 }
@@ -164,7 +164,7 @@ main (int argc, char *argv[])
    // Create a single RemoteHost
   NodeContainer remoteHostContainer;
   remoteHostContainer.Create (1);
-  Ptr<Node> remoteHost = remoteHostContainer.Get (0);
+  Ptr<Node> remoteHost = remoteHostContainer.Get(0);
   InternetStackHelper internet;
   internet.Install (remoteHostContainer);
 
@@ -226,6 +226,14 @@ main (int argc, char *argv[])
     mobility.Install(enbNodes);
     mobility.Install(ueNodes);
   }
+
+  // set position for remoteHostContainer
+  MobilityHelper hostMobility;
+  Ptr<ListPositionAllocator> hostPositionAlloc = CreateObject<ListPositionAllocator>();
+  hostPositionAlloc->Add(Vector(circle_radius, circle_radius, 0.0));  // 
+  hostMobility.SetPositionAllocator(hostPositionAlloc);
+  hostMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+  hostMobility.Install(enbNodes);  
 
   print_positions(enbNodes, ueNodes, output_dir + "/positions.txt");
   
@@ -346,8 +354,19 @@ main (int argc, char *argv[])
   r->SetAttribute("DlRlcOutputFilename",StringValue(str));
    
   // NetAnim
-  // AnimationInterface anim(output_dir + "/netanim_output.xml");
-
+  AnimationInterface anim(output_dir + "/netanim_output.xml");
+  // UE in red
+  for (uint32_t i = 0; i < ueNodes.GetN(); ++i) {
+      anim.UpdateNodeDescription(ueNodes.Get(i), "UE " + std::to_string(i + 1));
+      anim.UpdateNodeColor(ueNodes.Get(i), 255, 0, 0);  // Red
+  }
+  // eNB in blue
+  anim.UpdateNodeDescription(enbNodes.Get(0), "eNB");
+  anim.UpdateNodeColor(enbNodes.Get(0), 0, 0, 255);  // Blue
+  // remoteHostContainer in green
+  anim.UpdateNodeDescription(remoteHostContainer.Get(0), "Host");
+  anim.UpdateNodeColor(remoteHostContainer.Get(0), 0, 255, 0);  // Blue
+  
 
   // Uncomment to enable PCAP tracing
   //p2ph.EnablePcapAll("lena-epc-first");
