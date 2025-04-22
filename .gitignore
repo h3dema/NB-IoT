@@ -4,6 +4,9 @@
 .waf*/
 build/
 
+# simulation
+netanim*.xml
+
 # compiled python
 *.pyc
 
