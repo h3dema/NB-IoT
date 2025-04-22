@@ -75,12 +75,33 @@ void print_positions(NodeContainer enbNodes, NodeContainer ueNodes, std::string 
 }
 
 
+std::string create_output_dir() {
+  // -- create output folder
+  char buffer[PATH_MAX];
+  if (getcwd(buffer, sizeof(buffer)) == nullptr) {
+      perror("getcwd() error");
+      return "";
+  }
+
+  std::string curr_dir(buffer);
+  std::string output_dir = curr_dir + "/output";  // save to `output`
+  struct stat st = {0};
+  if (stat(output_dir.c_str(), &st) == -1) {
+      if (mkdir(output_dir.c_str(), 0755) == 0) {
+          std::cout << "Created directory: " << output_dir << std::endl;
+      }
+  }
+  return output_dir;
+}
+
+
+
 int
 main (int argc, char *argv[])
 {
 
   uint16_t numberOfeNB = 1;  // always one
-  uint16_t numberOfNodes = 2;   // number of UE's
+  uint16_t numberOfNodes = 20;   // number of UE's
   
   double simTime = 50.2;     //Sec
   double distance = 60.0;
@@ -101,45 +122,35 @@ main (int argc, char *argv[])
   uint8_t in_circle = 1;  // whether to place the nodes in a straight line (0) or in a circle (1)
   double circle_radius = 50.0;  // radius of the circle (eNB is the center)
 
-
-  // -- create output folder
-  char buffer[PATH_MAX];
-  if (getcwd(buffer, sizeof(buffer)) == nullptr) {
-      perror("getcwd() error");
-      return 1;
-  }
-
-  std::string curr_dir(buffer);
-  std::string output_dir = curr_dir + "/output";  // save to `output`
-  struct stat st = {0};
-  if (stat(output_dir.c_str(), &st) == -1) {
-      if (mkdir(output_dir.c_str(), 0755) == 0) {
-          std::cout << "Created directory: " << output_dir << std::endl;
-      }
-  }
+  std::string output_dir = create_output_dir();
 
   // Command line arguments
   CommandLine cmd;
   cmd.AddValue("numberOfNodes", "Number of UE", numberOfNodes);
+  cmd.AddValue("tc", "Test case number.", tc);
+  cmd.AddValue("in_circle", "Whether to use a linear (0) distribution or a circular one (1)", in_circle);
+  cmd.AddValue("distance", "Distance between eNBs [m] (in_circle=0)", distance);
+  cmd.AddValue("radius", "Radius of circle to spread eNBs [m] (in_circle=1)", circle_radius);
+
   cmd.AddValue("simTime", "Total duration of the simulation [s])", simTime);
-  cmd.AddValue("distance", "Distance between eNBs [m]", distance);
   cmd.AddValue("interPacketIntervaldl", "DL Inter packet interval [ms])", interPacketIntervaldl);
   cmd.AddValue("interPacketIntervalul", "UL Inter packet interval [ms])", interPacketIntervalul);
-  cmd.AddValue("useCa", "Whether to use carrier aggregation.", useCa);
-  cmd.AddValue("tc", "Test case number.", tc);
+  
   cmd.AddValue("packetsize", "Packet size", packetsize);
-  cmd.AddValue("t3324", " DRX timer", t3324); //<TODO: To connect maxmcs to lte-amc.cc>
+  
+  cmd.AddValue("useCa", "Whether to use carrier aggregation.", useCa);
+  cmd.AddValue("t3324", "DRX timer", t3324); //<TODO: To connect maxmcs to lte-amc.cc>
   cmd.AddValue("t3412", "PSM timer", t3412);
   cmd.AddValue("edrx_cycle", "edrx Cycle", edrx_cycle);
   cmd.AddValue("rrc_release_timer", "Connected timer", rrc_release_timer);
   cmd.AddValue("psm_enable", "PSM enabling flag", psm_enable);
   cmd.AddValue("maxmcs", "Maximum MCS", maxmcs);
+  
   cmd.AddValue("EnableRandom","EnableRandom", EnableRandom);
   cmd.Parse(argc, argv);
 
 
   //Config::SetDefault ("ns3::UeManager::m_rrcreleaseinterval", UintegerValue(20));
-
 
   if (useCa)
    {
@@ -190,30 +201,67 @@ main (int argc, char *argv[])
   ueNodes.Create(numberOfNodes);
 
   // Install Mobility Model
+  // position eNB at the center of the circle
+  MobilityHelper enbMobility;
+  Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator>();
   if (in_circle == 1) {
+    enbPositionAlloc->Add(Vector(circle_radius, circle_radius, 0.0));  // Center
+  }
+  else
+  {
+    enbPositionAlloc->Add(Vector(0.0, 0.0, 0.0));  // left
+  }
+  enbMobility.SetPositionAllocator(enbPositionAlloc);
+  enbMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+  enbMobility.Install(enbNodes);  
 
-    // position eNB at the center of the circle
-    MobilityHelper enbMobility;
-    Ptr<ListPositionAllocator> enbPositionAlloc = CreateObject<ListPositionAllocator>();
-    enbPositionAlloc->Add(Vector(0.0, 0.0, 0.0));  // Center
-    enbMobility.SetPositionAllocator(enbPositionAlloc);
-    enbMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-    enbMobility.Install(enbNodes);  
-  
-    // UE
+
+  // set position for remoteHostContainer (bottom right)
+  MobilityHelper hostMobility;
+  Ptr<ListPositionAllocator> hostPositionAlloc = CreateObject<ListPositionAllocator>();
+  hostPositionAlloc->Add(Vector(2 * circle_radius, 2 * circle_radius, 0.0));  // 
+  hostMobility.SetPositionAllocator(hostPositionAlloc);
+  hostMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+  hostMobility.Install(remoteHostContainer);  
+
+  // pgw (bottom center)
+  MobilityHelper pgwMobility;
+  Ptr<ListPositionAllocator> pgwPositionAlloc = CreateObject<ListPositionAllocator>();
+  pgwPositionAlloc->Add(Vector(circle_radius, 2 * circle_radius, 0.0));  // 
+  pgwMobility.SetPositionAllocator(pgwPositionAlloc);
+  pgwMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+  pgwMobility.Install(pgw);  
+
+  // UE 
+  if (in_circle == 1) {
     MobilityHelper ueMobility;
-    Ptr<UniformRandomVariable> var = CreateObject<UniformRandomVariable> ();
+    
+    // we can use UniformRandomVariable. however, nodes tend to concentrate at the center
+    // Ptr<UniformRandomVariable> var = CreateObject<UniformRandomVariable> ();
+    // ueMobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
+    //   "X", DoubleValue(circle_radius),
+    //   "Y", DoubleValue(circle_radius),
+    //   "rho", DoubleValue(var->GetValue(0, circle_radius))
+    // );
+
     ueMobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
-            "X", DoubleValue(0.0),
-            "Y", DoubleValue(0.0),
-            "rho", DoubleValue(var->GetValue(0, circle_radius))
+            "X", DoubleValue(circle_radius),
+            "Y", DoubleValue(circle_radius),
+            "rho", DoubleValue(circle_radius)
     );
+
+    // Just by using RandomDiscPositionAllocator, raises a runtime error (don´t know why!!!)
+    // ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
+    //   "X", DoubleValue(circle_radius),
+    //   "Y", DoubleValue(circle_radius),
+    //   "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + std::to_string(circle_radius) + "]")
+    // );
 
     ueMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     ueMobility.Install(ueNodes);
   }
   else {
-    // eNB is the left most node pos=(0,0), and the rest are placed at increased distance
+    // the rest are placed at increased distance
     MobilityHelper mobility;
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
   
@@ -226,14 +274,6 @@ main (int argc, char *argv[])
     mobility.Install(enbNodes);
     mobility.Install(ueNodes);
   }
-
-  // set position for remoteHostContainer
-  MobilityHelper hostMobility;
-  Ptr<ListPositionAllocator> hostPositionAlloc = CreateObject<ListPositionAllocator>();
-  hostPositionAlloc->Add(Vector(circle_radius, circle_radius, 0.0));  // 
-  hostMobility.SetPositionAllocator(hostPositionAlloc);
-  hostMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
-  hostMobility.Install(enbNodes);  
 
   print_positions(enbNodes, ueNodes, output_dir + "/positions.txt");
   
@@ -251,7 +291,7 @@ main (int argc, char *argv[])
     {
       Ptr<Node> ueNode = ueNodes.Get (u);
       // Set the default gateway for the UE
-      Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting (ueNode->GetObject<Ipv4> ());
+      Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting(ueNode->GetObject<Ipv4> ());
       ueStaticRouting->SetDefaultRoute (epcHelper->GetUeDefaultGatewayAddress (), 1);
     }
 
@@ -270,7 +310,7 @@ main (int argc, char *argv[])
   uint16_t otherPort = 3000;
   ApplicationContainer clientApps;
   ApplicationContainer serverApps;
-  for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
+  for (uint32_t u = 0; u < ueNodes.GetN(); ++u)
   {
       ++ulPort;
       ++otherPort;
@@ -294,8 +334,6 @@ main (int argc, char *argv[])
       ulClient.SetAttribute ("EnableRandom", UintegerValue (EnableRandom));
       ulClient.SetAttribute ("Percent", UintegerValue (100));
       ulClient.SetAttribute ("EnableDiagnostic", UintegerValue (0));
-
-
 
       clientApps.Add (dlClient.Install (remoteHost));
       clientApps.Add (ulClient.Install (ueNodes.Get(u)));
@@ -366,7 +404,10 @@ main (int argc, char *argv[])
   // remoteHostContainer in green
   anim.UpdateNodeDescription(remoteHostContainer.Get(0), "Host");
   anim.UpdateNodeColor(remoteHostContainer.Get(0), 0, 255, 0);  // Blue
-  
+  // pgw
+  anim.UpdateNodeDescription(pgw, "PGW");
+  anim.UpdateNodeColor(pgw, 0, 255, 0);  // Blue
+
 
   // Uncomment to enable PCAP tracing
   //p2ph.EnablePcapAll("lena-epc-first");
