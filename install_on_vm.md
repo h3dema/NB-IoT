@@ -197,7 +197,7 @@ git clone --depth=1 https://github.com/signetlabdei/lorawan NB-IoT/src/lorawan
 
 ```bash
 cd ~/ns3/NB-IoT
-CXXFLAGS="-std=c++0x -Wall -g -O0" ./waf configure --build-profile=debug --enable-static --enable-examples --enable-modules=lte
+CXXFLAGS="-std=c++0x -Wall -g -O0" ./waf configure --build-profile=debug --enable-static --enable-examples --enable-modules=lte,netanim
 ```
 
 - make
