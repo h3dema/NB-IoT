@@ -201,3 +201,30 @@ Run the simulation:
 ./waf --run lena-simple-epc-1
 ```
 
+## Give access to VM using WSL2
+
+If you want to access your Hyper-V VM from WSL (for example, a local Ubuntu on WSL2), you cannot by default because the IP from Hyper-V are not forwarded to WSL2 shells.
+The process is quite simple:
+
+1. Open Windows PowerShell as administrator.
+
+2. In the command prompt, run the following command:
+
+```
+Get-NetIPInterface | where {$_.InterfaceAlias -eq 'vEthernet (WSL (Hyper-v firewall))' -or $_.InterfaceAlias -eq 'vEthernet (Default Switch)'} | Set-NetIPInterface -Forwarding Enabled
+```
+
+You may need to change 'vEthernet (WSL (Hyper-v firewall))' depending on what is your local network configuration.
+In the commando prompt, run `ipconfig`. It lists several interfaces.
+Mine looks like below. Check the name after `Ethernet adapter`. This is the entry you must write in the powershell command above.
+
+<pre>
+Ethernet adapter vEthernet (WSL (Hyper-V firewall)):
+
+   Connection-specific DNS Suffix  . :
+   Link-local IPv6 Address . . . . . : fe80::5935:730c:9b6d:2966%75
+   IPv4 Address. . . . . . . . . . . : 172.28.96.1
+   Subnet Mask . . . . . . . . . . . : 255.255.240.0
+   Default Gateway . . . . . . . . . :
+</pre>
+
