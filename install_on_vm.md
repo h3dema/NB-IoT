@@ -182,6 +182,19 @@ git checkout energy_evaluation
 > PS: [Original repository](https://github.com/imec-idlab/NB-IoT.git)
 
 
+#### Add lorawan
+
+This repository cannot run a newer lorawan implementation from [lorawan](https://github.com/signetlabdei/lorawan) or [capacitor-ns3](https://github.com/signetlabdei/capacitor-ns3/).
+Check [test_lorawan.md](test_lorawan.md) to see how you can install a separate NS3 instance to run LoRaWAN.
+
+If you can test with an older version of lorawan
+```
+
+git clone --depth=1 https://github.com/signetlabdei/lorawan.git src/lorawan
+cd src/lorawan
+git checkout 0.1.0
+```
+
 #### compile the code
 
 - configure
@@ -190,6 +203,8 @@ git checkout energy_evaluation
 cd ~/ns3/NB-IoT
 CXXFLAGS="-std=c++0x -Wall -g -O0" ./waf configure --build-profile=debug --enable-static --enable-examples --enable-modules=lte,netanim
 ```
+
+> If you decided to download LoRaWAN, you must add `lorawan` to `--enable-modules` after `netanim`.
 
 - make
 
@@ -203,11 +218,6 @@ Run the simulation:
 ```bash
 ./waf --run lena-simple-epc-1
 ```
-
-#### Add lorawan
-
-This repository cannot run the lorawan implementation from [capacitor-ns3](https://github.com/signetlabdei/capacitor-ns3/) or [lorawan](https://github.com/signetlabdei/lorawan).
-Check [test_lorawan.md](test_lorawan.md) to see how you can install a separate NS3 instance to run LoRaWAN.
 
 
 
