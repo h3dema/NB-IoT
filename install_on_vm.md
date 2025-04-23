@@ -182,15 +182,6 @@ git checkout energy_evaluation
 > PS: [Original repository](https://github.com/imec-idlab/NB-IoT.git)
 
 
-#### Add lorawan
-
-Add s
-
-```
-cd ~/ns3/
-git clone --depth=1 https://github.com/signetlabdei/lorawan NB-IoT/src/lorawan
-```
-
 #### compile the code
 
 - configure
@@ -212,6 +203,13 @@ Run the simulation:
 ```bash
 ./waf --run lena-simple-epc-1
 ```
+
+#### Add lorawan
+
+This repository cannot run the lorawan implementation from [capacitor-ns3](https://github.com/signetlabdei/capacitor-ns3/) or [lorawan](https://github.com/signetlabdei/lorawan).
+Check [test_lorawan.md](test_lorawan.md) to see how you can install a separate NS3 instance to run LoRaWAN.
+
+
 
 ## Give access to VM using WSL2
 
