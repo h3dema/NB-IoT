@@ -6,6 +6,8 @@
   - Use at first similar setup as Mitsiou et al., 2023
   - We can evolve to a more complex setup as in Gharbieh et al., 2021
   
+  <img src="images/network_realization.png" width="400">
+
 [ ] merge with batteryless simulation  
 
 [ ] we have only one datasource with harvest energy. how do we apply that to several nodes?  
