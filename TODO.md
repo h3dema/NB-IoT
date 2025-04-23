@@ -1,5 +1,5 @@
-
-
+[ ] integrate UE implementation using Battery-less Node for Energy-harvesting IoT model from Capuzzo et al., 2021
+  - [repository](https://github.com/signetlabdei/capacitor-ns3)
 [ ] create a set of nodes (1 eNB + "x" UE)  
   - Use at first similar setup as Mitsiou et al., 2023
   - We can evolve to a more complex setup as in Gharbieh et al., 2021
