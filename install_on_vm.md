@@ -174,9 +174,21 @@ We are going to focus on the `energy_evaluation`:
 
 ```bash
 cd ~/ns3/
-git clone https://github.com/imec-idlab/NB-IoT.git
+git clone https://github.com/h3dema/NB-IoT.git
 cd NB-IoT
 git checkout energy_evaluation
+```
+
+> PS: [Original repository](https://github.com/imec-idlab/NB-IoT.git)
+
+
+#### Add lorawan
+
+Add s
+
+```
+cd ~/ns3/
+git clone --depth=1 https://github.com/signetlabdei/lorawan NB-IoT/src/lorawan
 ```
 
 #### compile the code
@@ -185,7 +197,7 @@ git checkout energy_evaluation
 
 ```bash
 cd ~/ns3/NB-IoT
-CXXFLAGS="-std=c++0x -Wall -g -O0" ./waf configure --build-profile=debug --enable-static --disable-examples --enable-modules=lte
+CXXFLAGS="-std=c++0x -Wall -g -O0" ./waf configure --build-profile=debug --enable-static --enable-examples --enable-modules=lte
 ```
 
 - make
