@@ -244,18 +244,18 @@ main (int argc, char *argv[])
     //   "rho", DoubleValue(var->GetValue(0, circle_radius))
     // );
 
-    ueMobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
-            "X", DoubleValue(circle_radius),
-            "Y", DoubleValue(circle_radius),
-            "rho", DoubleValue(circle_radius)
-    );
+    // ueMobility.SetPositionAllocator("ns3::UniformDiscPositionAllocator",
+    //         "X", DoubleValue(circle_radius),
+    //         "Y", DoubleValue(circle_radius),
+    //         "rho", DoubleValue(circle_radius)
+    // );
 
     // Just by using RandomDiscPositionAllocator, raises a runtime error (don´t know why!!!)
-    // ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
-    //   "X", DoubleValue(circle_radius),
-    //   "Y", DoubleValue(circle_radius),
-    //   "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + std::to_string(circle_radius) + "]")
-    // );
+    ueMobility.SetPositionAllocator("ns3::RandomDiscPositionAllocator",
+      "X", DoubleValue(circle_radius),
+      "Y", DoubleValue(circle_radius),
+      "Rho", StringValue("ns3::UniformRandomVariable[Min=0|Max=" + std::to_string(circle_radius) + "]")
+    );
 
     ueMobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     ueMobility.Install(ueNodes);
